@@ -2,12 +2,35 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.SortedSet;
+import java.util.ArrayList;
+import java.util.Random;
 
 public class SkipListSet <T extends Comparable<T>> implements SortedSet<T> {
 
+    ArrayList<SkipListItem<T>> levels = new ArrayList<SkipListItem<T>>();
+
+    // Generates skip list levels. The probability of a new level being generated decreases by 1/2
+    private boolean genLevels (SkipListItem<T> head) {
+        if (head == null) return false;
+
+        Random random = new Random();
+        int bound = 2;
+
+        levels.add(head); // Adds at least one level
+        while (random.nextInt(bound-1) == random.nextInt(bound-1)) { // Probabilty of adding a new level decreases by 1/2
+            levels.add(head);
+            bound *= 2;
+        }
+
+        return true;
+    }
+
     // Adds the specified element to this set if it is not already present.
     public boolean add (T e) {
-        return false;
+        SkipListItem<T> item = new SkipListItem(e);
+        if (isEmpty()) genLevels(item);
+
+        return true;
     }
 
     // Adds all of the elements in the specified collection to this set if they're not already present.
@@ -47,7 +70,7 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T> {
 
     // Returns true if this set contains no elements.
     public boolean isEmpty () {
-        return false;
+        return (levels.size() == 0);
     }
 
     // Returns an iterator over the elements in this set.
@@ -101,7 +124,12 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T> {
     }
 
     // Returns an array containing all of the elements in this set.
-    public Object[] toArray () {
+    public Object[] toArray() {
+        return null;
+    }
+
+    // Returns an array containing all of the elements in this set.
+    public <T> T[] toArray (T[] a) {
         return null;
     }
 
@@ -128,11 +156,13 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T> {
     }
 
     private class SkipListItem<T extends Comparable<T>> {
-        SkipListItem<T> up  = null;
-        SkipListItem<T> down = null;
         SkipListItem<T> prev = null;
         SkipListItem<T> next = null;
 
         T payload = null;
+
+        public SkipListItem (T payload) {
+            this.payload = payload;
+        }
     }
 }
