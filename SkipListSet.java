@@ -8,16 +8,16 @@ import java.util.Random;
 public class SkipListSet <T extends Comparable<T>> implements SortedSet<T> {
 
     ArrayList<SkipListItem<T>> levels = new ArrayList<SkipListItem<T>>();
+    Random random = new Random();
 
     // Generates skip list levels. The probability of a new level being generated decreases by 1/2
     private boolean genLevels (SkipListItem<T> head) {
         if (head == null) return false;
 
-        Random random = new Random();
         int bound = 2;
 
         levels.add(head); // Adds at least one level
-        while (random.nextInt(bound-1) == random.nextInt(bound-1)) { // Probabilty of adding a new level decreases by 1/2
+        while (random.nextInt(bound-1) == 0) { // Probabilty of adding a new level decreases by 1/2
             levels.add(head);
             bound *= 2;
         }
@@ -29,6 +29,11 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T> {
     public boolean add (T e) {
         SkipListItem<T> item = new SkipListItem(e);
         if (isEmpty()) genLevels(item);
+
+        int i;
+
+        for (i = 0; i < levels.size(); i++)
+            if (random.nextInt(i*((int)Math.pow(2, i))) == 0) levels.get(i).insert(item, levels, i);
 
         return true;
     }
@@ -163,6 +168,32 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T> {
 
         public SkipListItem (T payload) {
             this.payload = payload;
+        }
+
+        public boolean insert (SkipListItem<T> item, ArrayList<SkipListItem<T>> levels, int level) {
+            if (payload == null || item.payload == null) return false;
+            if (payload.compareTo(item.payload) == 0) return true; // item already exists
+            
+            if (payload.compareTo(item.payload) > 0) { // item < this
+                if (prev == null) { // Insert at beginning
+                    levels.set(level, item); // item is now at beginning of level
+                    item.next = this;
+                    prev = item;
+                    return true;
+                }
+
+                item.prev = prev; // Insert inbetween
+                prev.next = item;
+                prev = item;
+                item.next = this;
+                return true;
+            } else if (next == null) { // item > this->null
+                item.prev = this;
+                next = item;
+                return true;
+            }
+
+            return next.insert(item, levels, level);
         }
     }
 }
