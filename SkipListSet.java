@@ -32,6 +32,9 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T> {
 
         int i;
 
+        if (levels.get(0).payload.compareTo(item.payload) < 0)
+            // MAKE ITEM HEAD OF ALL LEVELS!!!
+
         for (i = 0; i < levels.size(); i++)
             if (random.nextInt(i*((int)Math.pow(2, i))) == 0) levels.get(i).insert(item, levels, i);
 
