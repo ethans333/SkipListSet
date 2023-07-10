@@ -179,6 +179,20 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T> {
         }
     }
 
+    public void print() {
+        for (int i = 0; i < levels.size(); i++) {
+            SkipListItem<T> current = levels.get(i);
+            System.out.printf("\n\nLevel: " + i + "\n");
+            while (current != null) {
+                if (current.payload instanceof Integer) {
+                    System.out.printf(((Integer)current.payload).intValue() + " -> ");
+                }
+                current = current.next;
+            }
+        }
+    }
+
+
     private class SkipListItem<T extends Comparable<T>> {
         SkipListItem<T> prev = null;
         SkipListItem<T> next = null;
@@ -225,6 +239,14 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T> {
 
             return next.insert(item);
         }
+    }
 
+    public static void main (String args[]) {
+        SkipListSet<Integer> sls = new SkipListSet<Integer>();
+
+        for (int i = 0; i < 100; i++)
+            sls.add(new Integer(i));
+
+        sls.print();
     }
 }
