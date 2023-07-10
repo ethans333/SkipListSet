@@ -10,7 +10,9 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T> {
     ArrayList<SkipListItem<T>> levels = new ArrayList<SkipListItem<T>>();
     Random random = new Random();
 
-    // Generates skip list levels. The probability of a new level being generated decreases by 1/2
+    // Generates skip list levels. The probability of a new level being generated decreases by 1/(2^i) every level
+    // head is new head to be at the head of every level
+    // Returns true if generating levels was successful, false otherwise
     private boolean genLevels (SkipListItem<T> head) {
         if (head == null) return false;
 
@@ -25,18 +27,32 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T> {
         return true;
     }
 
+    private boolean setNewHead (SkipListItem<T> item) {
+        for (int i = 0; i < levels.size(); i++) {
+            SkipListItem<T> oldHead = levels.get(i);
+
+            oldHead.prev = item; // Insert new head
+            item.next = oldHead;
+            levels.set(i, item);
+
+            if (random.nextInt((int)Math.pow(2, i))-1 != 0) // 1-[1/(2^i)] chance of old head getting deleted
+                levels.get(i).remove(item.next); // Remove old head
+        }
+        
+        return true;
+    }
+
     // Adds the specified element to this set if it is not already present.
     public boolean add (T e) {
-        SkipListItem<T> item = new SkipListItem(e);
+        SkipListItem<T> item = new SkipListItem<T>(e);
         if (isEmpty()) genLevels(item);
 
-        int i;
+        if (levels.get(0).payload.compareTo(item.payload) < 0) // If item should be new head
+            return setNewHead(item);
 
-        if (levels.get(0).payload.compareTo(item.payload) < 0)
-            // MAKE ITEM HEAD OF ALL LEVELS!!!
-
-        for (i = 0; i < levels.size(); i++)
-            if (random.nextInt(i*((int)Math.pow(2, i))) == 0) levels.get(i).insert(item, levels, i);
+        for (int i = 0; i < levels.size(); i++)
+            if (random.nextInt((int)Math.pow(2, i))-1 == 0) // 1/(2^i) chance of getting inserted
+                levels.get(i).insert(item);
 
         return true;
     }
@@ -173,30 +189,42 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T> {
             this.payload = payload;
         }
 
-        public boolean insert (SkipListItem<T> item, ArrayList<SkipListItem<T>> levels, int level) {
-            if (payload == null || item.payload == null) return false;
-            if (payload.compareTo(item.payload) == 0) return true; // item already exists
-            
-            if (payload.compareTo(item.payload) > 0) { // item < this
-                if (prev == null) { // Insert at beginning
-                    levels.set(level, item); // item is now at beginning of level
-                    item.next = this;
-                    prev = item;
-                    return true;
-                }
-
-                item.prev = prev; // Insert inbetween
-                prev.next = item;
-                prev = item;
-                item.next = this;
-                return true;
-            } else if (next == null) { // item > this->null
-                item.prev = this;
-                next = item;
+        // Removes self from list
+        // item is the item to be deleted
+        // Returns what was removed from the list
+        // If current node is head of level does not update level's head
+        public boolean remove (SkipListItem<T> item) {
+            if (payload.compareTo(item.payload) == 0) {
+                if (prev != null) prev.next = next;
+                if (next != null) next.prev = prev;
                 return true;
             }
 
-            return next.insert(item, levels, level);
+            if (next == null) return false; // item doesn't exist in list
+
+            return next.remove(item);
         }
+
+        // Traverses linked list inserting item before, inbetween or after
+        // item is the item to be inserted
+        // Returns true if insertion was successful
+        // If current node was inserted to front does not update level's new head
+        public boolean insert (SkipListItem<T> item) {
+            if (payload.compareTo(item.payload) == 0) return true; // item already exists
+
+            if (payload.compareTo(item.payload) > 0) { // item < this
+                if (prev != null) prev.next = item; // Inserts new item behind current node
+                item.prev = prev;
+                prev = item;
+                return true;
+            } else if (next == null) { // Inserts new item after last node
+                next = item;
+                item.prev = this;
+                return true;
+            }
+
+            return next.insert(item);
+        }
+
     }
 }
