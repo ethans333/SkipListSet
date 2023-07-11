@@ -1,4 +1,5 @@
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.SortedSet;
@@ -12,15 +13,24 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T> {
 
     private Random random = new Random();
 
+    public void printSet () {
+        System.out.printf("\nRows: %d\n", rows);
+        for (int i = 0; i < rows; i++) {
+            head.printRow(i);
+            System.out.printf("\n");
+        }
+    }
+
     // Adds the specified element to this set if it is not already present.
     public boolean add (T e) {
+        SkipListItem<T> item = new SkipListItem<T>(e);
         if (head == null) {
-            head = new SkipListItem<T>(e);
+            head = item;
             rows = head.nRows();
+            head.initPointers();
             return true;
         }
-
-        return true;
+        return head.insert(item);
     }
 
     // Adds all of the elements in the specified collection to this set if they're not already present.
@@ -147,70 +157,93 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T> {
     private class SkipListItem<T extends Comparable<T>> {
         private T value = null;
 
-        ArrayList<SkipListItem<T>> prev = new ArrayList<SkipListItem<T>>();
-        ArrayList<SkipListItem<T>> next = new ArrayList<SkipListItem<T>>();
+        ArrayList<SkipListItem<T>> prev = null;
+        ArrayList<SkipListItem<T>> next = null;
 
         private int r = 0; // current row
+        private int maxR = Integer.MAX_VALUE; // max row item appears at
 
         // Returns integer that has a 100% chance of being 1, 50% change of being 2, 100/2^n% of being n
         public int nRows () {
-            int r = 1;
-            while (random.nextInt((int)Math.pow(2, r)) == 0)
-                r++;
-            return r;
+            int n = 1;
+            while (random.nextInt((int)Math.pow(2, n)) == 0)
+                n++;
+            return n;
         }
 
         public boolean remove (SkipListItem<T> item) {
             return false;
         }
 
-        // Recursively inserts item into skip list on a current row
-        // item is item to be inserted into row
-        // returns true if item inserted, false if item already exists in row
-        private boolean insertHelper (SkipListItem<T> item, int maxRow) {
+        private boolean insertHelper (SkipListItem<T> item) {
+            if (r == -1) return true; // reached and insert at bottom row
             if (value.compareTo(item.value) == 0) return false; // item already exists
 
-            if (value.compareTo(item.value) < 0) {  // this < item
-                if (prev.get(r) == null) { // @ beginning of row
-                    T temp = value; // swap value w/ item.value then insert old value
-                    value = item.value;
-                    item.value = temp;
-                    return insert(item);
+            if (prev.get(r) == null && value.compareTo(item.value) > 0) { // this is head & item < this
+                T temp = value; // swap old head value with item value & insert old head
+                value = item.value;
+                item.value = temp;
+                return insert(item);
+            }
+
+            if (next.get(r) == null && value.compareTo(item.value) < 0) { // this is tail & item > this
+                if (maxR >= r) {
+                    item.prev.set(r, this); // insert @ end
+                    this.next.set(r, item);
                 }
 
-                item.next.set(r, this); // insert in between
-                item.prev.set(r, prev.get(r));
-                prev.get(r).next.set(r, item);
-                prev.set(r, item);
-                return true;
+                r--; // drop down a row & continue from this node
+                return insertHelper(item);
             }
 
-            if (next.size() == r) { // @ end of row
-                next.add(item); // insert at end
-                item.prev.add(this);
-                return true;
+            if (value.compareTo(item.value) < 0 && next.get(r).value.compareTo(item.value) > 0) { // this < item < next
+                if (maxR >= r) {
+                    item.prev.set(r, this); // insert in between
+                    item.next.set(r, next.get(r));
+                    next.get(r).prev.set(r, item);
+                    next.set(r, item);
+                }
+
+                r--; // drop down a row & continue from this node
+                return insertHelper(item);
             }
 
-            return next.get(r).insertHelper(item, maxRow); // continue to next node
+            return next.get(r).insert(item); // continue to next
         }
 
-        // determines max row item will be inserted at and then inserts it into each row at or below max row
-        // item is item to be inserted into the skip list
-        // returns true if insertion was successful, false otherwise
         public boolean insert (SkipListItem<T> item) {
-            int maxRow = Integer.MAX_VALUE;
-            while (maxRow > rows) maxRow = nRows(); // set max row to be row <= rows of skip list
+            r = rows-1; // start at top row
+            while (maxR > rows) maxR = nRows(); // set max row <= # of rows
+            return insertHelper(item);
+        }
 
-            for (r = rows; r >= 0; r--) insert(item, maxRow); // insert item at and below maxRow
-            return true;
+        public void initPointers () {
+            prev = new ArrayList<SkipListItem<T>>(Collections.nCopies(rows, null));
+            next = new ArrayList<SkipListItem<T>>(Collections.nCopies(rows, null));
+        }
+
+        public void printRow (int row) {
+            System.out.printf("%d ", value);
+            if (next.get(row) == null) return;
+            next.get(row).printRow(row);
         }
 
         public SkipListItem (T value) {
             this.value = value;
+            initPointers();
         }
     }
 
     public static void main (String args[]) {
-        SkipListSet<Integer> sls = new SkipListSet<Integer>();
+        SkipListSet<Integer> s = new SkipListSet<Integer>();
+
+        for (int j = 0; j < 50; j++) {
+            s = new SkipListSet<Integer>();
+            
+            for(int i = 0; i < 10; i++)
+                s.add(Integer.valueOf(s.random.nextInt(100)));
+
+            s.printSet();
+        }
     }
 }
