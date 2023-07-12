@@ -10,8 +10,9 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T> {
 
     private SkipListItem<T> head = null;
     public int rows = 0;
+    public int seed = 0;
 
-    private Random random = new Random();
+    private Random random = new Random(seed);
 
     public void printSet () {
         System.out.printf("\nRows: %d\n", rows);
@@ -20,7 +21,7 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T> {
             head.printRow(i);
             System.out.printf("\n");
         }
-        head.printMaxR();
+        //head.printMaxR();
     }
 
     // Adds the specified element to this set if it is not already present.
@@ -179,8 +180,50 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T> {
             while (maxR > rows) maxR = nRows()-1;
         }
 
-        public boolean remove (SkipListItem<T> item) {
-            return false;
+        public boolean removeHelper (T del) {
+            if (r == -1) return true; // reached and deleted bottom row
+            if (value.compareTo(del) == 0) { // this == item
+                if (prev.get(r) == null && next.get(r) != null) { // normal head
+                    T tempVal = value; // swap old head value with its absolute next value & delete old head value
+                    value = next.get(0).value;
+                    next.get(0).value = tempVal;
+                    return removeHelper(del);
+                }
+
+                if (prev.get(r) != null && next.get(r) == null) { // lone tail
+                    head = null;
+                    rows = 0;
+                    return true;
+                }
+
+                if (prev.get(r) != null && next.get(r) == null) { // tail
+                    prev.get(r).next.set(r, null);
+                    r--; // drop row & continue
+                    return removeHelper(del);
+                }
+
+                if (prev.get(r) != null && next.get(r) != null) { // in between
+                    prev.get(r).next.set(r, next.get(r)); // prev -> next
+                    next.get(r).prev.set(r, prev.get(r)); // prev <- next
+                    r--; // drop row & continue
+                    return removeHelper(del);
+                }
+            }
+
+            if (next.get(r) == null) {
+                if (r == 0) return false; // del not in list
+                r--;
+                return removeHelper(del);
+            }
+
+            if (next.get(r).value.compareTo(del) > 0) r--;
+
+            return next.get(r).removeHelper(del);
+        }
+
+        public boolean remove (T del) {
+            r = rows-1;
+            return removeHelper(del);
         }
 
         private boolean insertHelper (SkipListItem<T> item) {
@@ -190,8 +233,6 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T> {
             if (prev.get(r) == null && value.compareTo(item.value) > 0) { // this is head & item < this
                 T tempVal = value; // swap old head value with item value & insert old head
                 value = item.value;
-                maxR = rows-1;
-
                 item.value = tempVal;
                 return insert(item);
             }
@@ -251,15 +292,24 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T> {
     }
 
     public static void main (String args[]) {
+
         SkipListSet<Integer> s = new SkipListSet<Integer>();
 
-        for (int j = 0; j < 100; j++) {
+        int j = 0;
+
+        while (s.rows < 3) {
             s = new SkipListSet<Integer>();
 
             for(int i = 0; i < 10; i++)
                 s.add(Integer.valueOf(s.random.nextInt(100)));
+            
+            System.out.println(j + " : " + s.rows);
 
-            if (s.rows >= 3) s.printSet();
+            j++;
+            s.seed = j;
         }
+
+        System.out.println(s.seed);
+        s.printSet();
     }
 }
