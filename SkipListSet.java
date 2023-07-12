@@ -20,6 +20,7 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T> {
             head.printRow(i);
             System.out.printf("\n");
         }
+        head.printMaxR();
     }
 
     // Adds the specified element to this set if it is not already present.
@@ -29,6 +30,7 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T> {
             head = item;
             rows = head.nRows();
             head.initPointers();
+            head.maxR = rows-1;
             return true;
         }
         return head.insert(item);
@@ -172,6 +174,11 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T> {
             return n;
         }
 
+        // Sets max row number to one that is <= # of rows in skip list
+        public void setMaxRow () {
+            while (maxR > rows) maxR = nRows()-1;
+        }
+
         public boolean remove (SkipListItem<T> item) {
             return false;
         }
@@ -181,14 +188,16 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T> {
             if (value.compareTo(item.value) == 0) return false; // item already exists
 
             if (prev.get(r) == null && value.compareTo(item.value) > 0) { // this is head & item < this
-                T temp = value; // swap old head value with item value & insert old head
+                T tempVal = value; // swap old head value with item value & insert old head
                 value = item.value;
-                item.value = temp;
+                maxR = rows-1;
+
+                item.value = tempVal;
                 return insert(item);
             }
 
             if (next.get(r) == null && value.compareTo(item.value) < 0) { // this is tail & item > this
-                if (maxR >= r) {
+                if (item.maxR >= r) {
                     item.prev.set(r, this); // insert @ end
                     this.next.set(r, item);
                 }
@@ -198,7 +207,7 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T> {
             }
 
             if (value.compareTo(item.value) < 0 && next.get(r).value.compareTo(item.value) > 0) { // this < item < next
-                if (maxR >= r) {
+                if (item.maxR >= r) {
                     item.prev.set(r, this); // insert in between
                     item.next.set(r, next.get(r));
                     next.get(r).prev.set(r, item);
@@ -214,7 +223,7 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T> {
 
         public boolean insert (SkipListItem<T> item) {
             r = rows-1; // start at top row
-            while (maxR > rows) maxR = nRows()-1; // set max row <= # of rows
+            item.setMaxRow(); // set max row <= # of rows
             return insertHelper(item);
         }
 
@@ -244,13 +253,13 @@ public class SkipListSet <T extends Comparable<T>> implements SortedSet<T> {
     public static void main (String args[]) {
         SkipListSet<Integer> s = new SkipListSet<Integer>();
 
-        for (int j = 0; j < 50; j++) {
+        for (int j = 0; j < 100; j++) {
             s = new SkipListSet<Integer>();
 
             for(int i = 0; i < 10; i++)
                 s.add(Integer.valueOf(s.random.nextInt(100)));
 
-            s.printSet();
+            if (s.rows >= 3) s.printSet();
         }
     }
 }
