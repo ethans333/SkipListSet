@@ -15,8 +15,8 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
     private Random random = new Random();
 
     public void printSet() {
-        System.out.printf("\nRows: %d\n", rows);
-        for (int i = 0; i < rows; i++) {
+        System.out.printf("\n#' Rows: %d\n", rows);
+        for (int i = rows - 1; i >= 0; i--) {
             System.out.printf("r%d: ", i);
             head.printRow(i);
             System.out.printf("\n");
@@ -296,13 +296,6 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
             next.get(row).printRow(row);
         }
 
-        public void printMaxR() {
-            System.out.printf("\n(value: %d maxR: %d)", value, maxR);
-            if (next.get(0) == null)
-                return;
-            next.get(0).printMaxR();
-        }
-
         public SkipListItem(T value) {
             this.value = value;
             initPointers();
@@ -313,6 +306,7 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
 
         SkipListSet<Integer> s = new SkipListSet<Integer>();
 
+        // // Generates SkipLists of level 3 or more
         // for (int j = 0; j < 50; j++) {
         // s = new SkipListSet<Integer>();
 
