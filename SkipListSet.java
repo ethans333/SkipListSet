@@ -8,7 +8,11 @@ import java.util.Random;
 
 public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
 
-    private SkipListItem<T> head = null;
+    private SkipListItem<T> head = null; // head of skiplist
+    private SkipListItem tail = null; // tail of skiplist
+    private SkipListItem<T> current = null; // current item being iterated on
+
+    private int size = 0;
     private int rows = 0;
     private int r = 0; // current row
 
@@ -29,12 +33,18 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
         SkipListItem<T> item = new SkipListItem<T>(e);
         if (head == null) {
             head = item;
+            tail = item;
+            current = item;
+            size = 1;
             rows = head.nRows();
             head.initPointers();
             head.maxR = rows - 1;
             return true;
         }
-        return head.insert(item);
+        boolean res = head.insert(item);
+        if (res)
+            size++;
+        return res;
     }
 
     // Adds all of the elements in the specified collection to this set if they're
@@ -82,12 +92,18 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
 
     // Returns an iterator over the elements in this set.
     public Iterator<T> iterator() {
-        return null;
+        SkipListSetIterator<T> it = new SkipListSetIterator<T>();
+        return it;
     }
 
     // Removes the specified element from this set if it is present.
     public boolean remove(Object o) {
-        return head.remove((T) o);
+        if (head == null)
+            return false;
+        boolean res = head.remove((T) o);
+        if (res)
+            size--;
+        return res;
     }
 
     // Removes from this set all of its elements that are contained in the specified
@@ -104,7 +120,7 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
 
     // Returns the number of elements in this set (its cardinality).
     public int size() {
-        return 0;
+        return size;
     }
 
     // Returns a view of the portion of this set whose elements range from
@@ -115,12 +131,14 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
 
     // Returns the first (lowest) element currently in this set.
     public T first() {
-        return null;
+        if (head == null)
+            return null;
+        return head.value;
     }
 
     // Returns the last (highest) element currently in this set.
     public T last() {
-        return null;
+        return (T) tail.value;
     }
 
     // Returns a view of the portion of this set whose elements are strictly less
@@ -132,6 +150,7 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
     // Returns a view of the portion of this set whose elements are greater than or
     // equal to fromElement.
     public SkipListSet<T> tailSet(T fromElement) {
+
         return null;
     }
 
@@ -152,16 +171,21 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
     private class SkipListSetIterator<T extends Comparable<T>> implements Iterator<T> {
         // Returns true if the iteration has more elements.
         public boolean hasNext() {
-            return false;
+            if (current == null)
+                return false;
+            return (current.next.get(0) != null);
         }
 
         // Returns the next element in the iteration.
         public T next() {
-            return null;
+            if (!hasNext())
+                return null;
+            return (T) current.next.get(0).value;
         }
 
         // Removes current element in iteration.
         public void remove() {
+            head.remove(current.value);
             return;
         }
     }
@@ -208,6 +232,8 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
 
                 if (prev.get(r) != null && next.get(r) == null) { // tail
                     prev.get(r).next.set(r, null);
+                    if (r == 0 && tail == this)
+                        tail = prev.get(r);
                     r--; // drop row & continue
                     return removeHelper(del);
                 }
@@ -257,6 +283,8 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
                 if (item.maxR >= r) {
                     item.prev.set(r, this); // insert @ end
                     this.next.set(r, item);
+                    if (r == 0)
+                        tail = item;
                 }
 
                 r--; // drop down a row & continue from this node

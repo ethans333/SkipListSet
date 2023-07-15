@@ -4,4 +4,21 @@
 
 ### To Do
 
-- Implement Iterator
+- [ ] Add All
+- [ ] Clear
+- [ ] Comparator
+- [ ] Contains
+- [ ] Contains All
+- [ ] Equals
+- [ ] Hash Code
+- [ ] IsEmpty
+- [ ] Remove All
+- [ ] Retain All
+- [x] Size
+- [ ] SubSet
+- [x] First
+- [x] Last
+- [ ] HeadSet
+- [ ] Tail Set
+- [ ] To Array
+- [ ] ReBalance
