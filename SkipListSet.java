@@ -211,6 +211,10 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
         return null;
     }
 
+    public void reBalance() {
+
+    }
+
     // SkipListSet Constructor
     public SkipListSet() {
         clear();
@@ -387,27 +391,35 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
 
         SkipListSet<Integer> s = new SkipListSet<Integer>();
 
-        // // Generates SkipLists of level 3 or more
-        // for (int j = 0; j < 50; j++) {
-        // s = new SkipListSet<Integer>();
+        // Generates SkipLists of level 3 or more
+        int j = 0;
+        while (true) {
+            s = new SkipListSet<Integer>();
 
-        // s.random.setSeed(j);
+            s.random.setSeed(j);
+
+            for (int i = 0; i < 100000; i++) {
+                try {
+                    s.add(Integer.valueOf(s.random.nextInt(100)));
+                } catch (StackOverflowError e) {
+                    System.out.println("Seed: " + j);
+                }
+            }
+
+            // if (s.rows >= 3) {
+            // System.out.println("----------\nSeed: " + j);
+            // s.printSet();
+            // System.out.println("\n");
+            // }
+
+            j = s.random.nextInt();
+        }
+
+        // s = new SkipListSet<Integer>();
+        // s.random.setSeed(5);
 
         // for (int i = 0; i < 10; i++)
         // s.add(Integer.valueOf(s.random.nextInt(100)));
-
-        // if (s.rows >= 3) {
-        // System.out.println("----------\nSeed: " + j);
         // s.printSet();
-        // System.out.println("\n");
-        // }
-        // }
-
-        s = new SkipListSet<Integer>();
-        s.random.setSeed(5);
-
-        for (int i = 0; i < 10; i++)
-            s.add(Integer.valueOf(s.random.nextInt(100)));
-        s.printSet();
     }
 }

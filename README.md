@@ -4,6 +4,7 @@
 
 ### To Do
 
+- Getting stack overflow for insertion
 - [x] Add All
 - [x] Clear
 - [ ] Comparator
