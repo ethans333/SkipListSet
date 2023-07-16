@@ -4,16 +4,16 @@
 
 ### To Do
 
-- [ ] Add All
-- [ ] Clear
+- [x] Add All
+- [x] Clear
 - [ ] Comparator
-- [ ] Contains
-- [ ] Contains All
-- [ ] Equals
-- [ ] Hash Code
-- [ ] IsEmpty
-- [ ] Remove All
-- [ ] Retain All
+- [x] Contains
+- [x] Contains All
+- [x] Equals
+- [x] Hash Code
+- [x] IsEmpty
+- [x] Remove All
+- [x] Retain All
 - [x] Size
 - [ ] SubSet
 - [x] First

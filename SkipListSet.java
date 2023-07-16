@@ -2,19 +2,20 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.SortedSet;
 import java.util.ArrayList;
 import java.util.Random;
 
 public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
 
-    private SkipListItem<T> head = null; // head of skiplist
-    private SkipListItem tail = null; // tail of skiplist
-    private SkipListItem<T> current = null; // current item being iterated on
+    private SkipListItem<T> head; // head of skiplist
+    private SkipListItem tail; // tail of skiplist
+    private SkipListItem<T> current; // current item being iterated on
 
-    private int size = 0;
-    private int rows = 0;
-    private int r = 0; // current row
+    private int size;
+    private int rows;
+    private int r; // current row
 
     private Random random = new Random();
 
@@ -50,12 +51,23 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
     // Adds all of the elements in the specified collection to this set if they're
     // not already present.
     public boolean addAll(Collection<? extends T> c) {
-        return false;
+        for (T item : c)
+            if (!add(item))
+                return false;
+        return true;
     }
 
     // Removes all of the elements from this set.
     public void clear() {
-        return;
+        head = null;
+        tail = null;
+        current = null;
+
+        size = 0;
+        rows = 0;
+        r = 0; // current row
+
+        random = new Random();
     }
 
     // Returns the comparator used to order the elements in this set, or null if
@@ -66,28 +78,52 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
 
     // Returns true if this set contains the specified element.
     public boolean contains(Object o) {
+        SkipListSetIterator<T> it = (SkipListSetIterator<T>) iterator();
+
+        while (it.hasNext()) {
+            if (current.value.compareTo(((T) o)) == 0)
+                return true;
+            current = current.next.get(0);
+        }
+
         return false;
     }
 
     // Returns true if this set contains all of the elements of the specified
     // collection.
     public boolean containsAll(Collection<?> c) {
-        return false;
+        for (T item : (Collection<T>) c)
+            if (!contains(item))
+                return false;
+        return true;
     }
 
     // Compares the specified object with this set for equality.
     public boolean equals(Object o) {
-        return false;
+        if (!(o instanceof SkipListSet))
+            return false;
+
+        SkipListSetIterator<T> ti = (SkipListSetIterator<T>) iterator();
+        SkipListSetIterator<T> oi = (SkipListSetIterator<T>) ((SkipListSet<T>) o).iterator();
+
+        while (ti.hasNext() && oi.hasNext()) {
+            if (current.value != ((SkipListSet<T>) o).current.value)
+                return false;
+            current = current.next.get(0);
+            ((SkipListSet<T>) o).current = ((SkipListSet<T>) o).current.next.get(0);
+        }
+
+        return true;
     }
 
     // Returns the hash code value for this set.
     public int hashCode() {
-        return -1;
+        return Objects.hashCode(this);
     }
 
     // Returns true if this set contains no elements.
     public boolean isEmpty() {
-        return false;
+        return (size == 0);
     }
 
     // Returns an iterator over the elements in this set.
@@ -109,13 +145,24 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
     // Removes from this set all of its elements that are contained in the specified
     // collection.
     public boolean removeAll(Collection<?> c) {
-        return false;
+        for (T item : (Collection<T>) c)
+            if (!remove(item))
+                return false;
+        return true;
     }
 
     // Retains only the elements in this set that are contained in the specified
     // collection.
     public boolean retainAll(Collection<?> c) {
-        return false;
+        if (!containsAll(c))
+            return false;
+        SkipListSetIterator<T> it = (SkipListSetIterator<T>) iterator();
+
+        while (it.hasNext()) {
+            if (!c.contains(current))
+                remove(current.value);
+        }
+        return true;
     }
 
     // Returns the number of elements in this set (its cardinality).
@@ -166,6 +213,7 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
 
     // SkipListSet Constructor
     public SkipListSet() {
+        clear();
     }
 
     private class SkipListSetIterator<T extends Comparable<T>> implements Iterator<T> {
@@ -180,13 +228,18 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
         public T next() {
             if (!hasNext())
                 return null;
-            return (T) current.next.get(0).value;
+            return (T) current.next.get(0);
         }
 
         // Removes current element in iteration.
         public void remove() {
             head.remove(current.value);
             return;
+        }
+
+        // Constructor for Iterator
+        public SkipListSetIterator() {
+            current = head;
         }
     }
 
@@ -355,12 +408,6 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
 
         for (int i = 0; i < 10; i++)
             s.add(Integer.valueOf(s.random.nextInt(100)));
-        s.printSet();
-
-        s.remove(Integer.valueOf(3));
-        s.remove(Integer.valueOf(6));
-        s.remove(Integer.valueOf(87));
-
         s.printSet();
     }
 }
