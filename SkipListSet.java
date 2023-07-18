@@ -162,6 +162,7 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
         while (it.hasNext()) {
             if (!c.contains(current))
                 remove(current.value);
+            current = current.next.get(0);
         }
         return true;
     }
@@ -174,7 +175,17 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
     // Returns a view of the portion of this set whose elements range from
     // fromElement, inclusive, to toElement, exclusive.
     public SkipListSet<T> subSet(T fromElement, T toElement) {
-        return null;
+        if (toElement.compareTo(fromElement) < 0)
+            return null;
+        SkipListSet<T> ss = new SkipListSet<T>();
+        SkipListSetIterator<T> it = (SkipListSetIterator<T>) iterator();
+
+        while (it.hasNext()) {
+            if (current.value.compareTo(fromElement) >= 0 && current.value.compareTo(toElement) <= 0)
+                ss.add(current.value); // if between from and to
+            current = current.next.get(0);
+        }
+        return ss;
     }
 
     // Returns the first (lowest) element currently in this set.
@@ -192,19 +203,42 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
     // Returns a view of the portion of this set whose elements are strictly less
     // than toElement
     public SkipListSet<T> headSet(T toElement) {
-        return null;
+        SkipListSet<T> ss = new SkipListSet<T>();
+        SkipListSetIterator<T> it = (SkipListSetIterator<T>) iterator();
+
+        while (it.hasNext() && current.value.compareTo(toElement) <= 0) {
+            ss.add(current.value); // if current < toElement, add
+            current = current.next.get(0);
+        }
+        return ss;
     }
 
     // Returns a view of the portion of this set whose elements are greater than or
     // equal to fromElement.
     public SkipListSet<T> tailSet(T fromElement) {
+        SkipListSet<T> ss = new SkipListSet<T>();
+        SkipListSetIterator<T> it = (SkipListSetIterator<T>) iterator();
 
-        return null;
+        while (it.hasNext() && current.value.compareTo(fromElement) >= 0) {
+            ss.add(current.value); // if current < toElement, add
+            current = current.next.get(0);
+        }
+        return ss;
     }
 
     // Returns an array containing all of the elements in this set.
     public Object[] toArray() {
-        return null;
+        SkipListSetIterator<T> it = (SkipListSetIterator<T>) iterator();
+        Object[] arr = new Object[size()];
+
+        int i = 0;
+
+        while (it.hasNext()) {
+            arr[i] = current.value;
+            current = current.next.get(0);
+        }
+
+        return arr;
     }
 
     // Returns an array containing all of the elements in this set.
@@ -424,8 +458,10 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
             s.add(Integer.valueOf(s.random.nextInt(1000)));
         s.printSet();
 
-        s.add(-1);
-        System.out.println("Iterations: " + s.iterations);
-        s.printSet();
+        System.out.println("Size: " + s.size());
+
+        // s.add(-1);
+        // System.out.println("Iterations: " + s.iterations);
+        // s.printSet();
     }
 }
