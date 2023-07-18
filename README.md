@@ -5,6 +5,42 @@
 ### To Do
 
 - Getting stack overflow for insertion
+
+```
+next
+next
+next
+next
+next
+next
+next
+next
+next
+next
+next
+next
+next
+next
+next
+next
+Exception in thread "main" java.lang.StackOverflowError
+	at SkipListSet$SkipListItem.insert(SkipListSet.java:374)
+	at SkipListSet$SkipListItem.insertHelper(SkipListSet.java:368)
+	at SkipListSet$SkipListItem.insert(SkipListSet.java:374)
+	at SkipListSet$SkipListItem.insertHelper(SkipListSet.java:368)
+	at SkipListSet$SkipListItem.insert(SkipListSet.java:374)
+	at SkipListSet$SkipListItem.insertHelper(SkipListSet.java:368)
+	at SkipListSet$SkipListItem.insert(SkipListSet.java:374)
+	at SkipListSet$SkipListItem.insertHelper(SkipListSet.java:368)
+	at SkipListSet$SkipListItem.insert(SkipListSet.java:374)
+	at SkipListSet$SkipListItem.insertHelper(SkipListSet.java:368)
+	at SkipListSet$SkipListItem.insert(SkipListSet.java:374)
+	at SkipListSet$SkipListItem.insertHelper(SkipListSet.java:368)
+	at SkipListSet$SkipListItem.insert(SkipListSet.java:374)
+	at SkipListSet$SkipListItem.insertHelper(SkipListSet.java:368)
+	at SkipListSet$SkipListItem.insert(SkipListSet.java:374)
+```
+
 - [x] Add All
 - [x] Clear
 - [ ] Comparator

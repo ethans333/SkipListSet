@@ -16,6 +16,7 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
     private int size;
     private int rows;
     private int r; // current row
+    public int iterations = 0;
 
     private Random random = new Random();
 
@@ -270,103 +271,103 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
                 maxR = nRows() - 1;
         }
 
-        public boolean removeHelper(T del) {
-            if (r == -1)
-                return true; // reached and deleted bottom row
-            if (value.compareTo(del) == 0) { // this == item
-                if (prev.get(r) == null && next.get(r) != null) { // normal head
-                    T tempVal = value; // swap old head value with its absolute next value & delete old head value
-                    value = next.get(0).value;
-                    next.get(0).value = tempVal;
-                    return removeHelper(del);
-                }
-
-                if (prev.get(r) == null && next.get(r) == null) { // lone head
-                    rows--;
-                    r--; // drop row & continue
-                    return removeHelper(del);
-                }
-
-                if (prev.get(r) != null && next.get(r) == null) { // tail
-                    prev.get(r).next.set(r, null);
-                    if (r == 0 && tail == this)
-                        tail = prev.get(r);
-                    r--; // drop row & continue
-                    return removeHelper(del);
-                }
-
-                if (prev.get(r) != null && next.get(r) != null) { // in between
-                    prev.get(r).next.set(r, next.get(r)); // prev -> next
-                    next.get(r).prev.set(r, prev.get(r)); // prev <- next
-                    r--; // drop row & continue
-                    return removeHelper(del);
-                }
-            }
-
-            if (next.get(r) == null) {
-                if (r == 0)
-                    return false; // del not in list
-                r--; // drop row & continue
-                return removeHelper(del);
-            }
-
-            if (next.get(r).value.compareTo(del) > 0) {
-                r--; // drop row & continue
-                return removeHelper(del);
-            }
-
-            return next.get(r).removeHelper(del);
-        }
-
         public boolean remove(T del) {
             r = rows - 1;
-            return removeHelper(del);
-        }
+            SkipListItem<T> current = this;
 
-        private boolean insertHelper(SkipListItem<T> item) {
-            if (r == -1)
-                return true; // reached and insert at bottom row
-            if (value.compareTo(item.value) == 0)
-                return false; // item already exists
+            while (r > -1) {
+                if (current.value.compareTo(del) == 0) { // current == item
+                    if (current.prev.get(r) == null && current.next.get(r) != null) { // normal head
+                        T tempVal = current.value; // swap old head value its next value & delete old head
+                        current.value = current.next.get(0).value;
+                        current.next.get(0).value = tempVal;
+                        continue;
+                    }
 
-            if (prev.get(r) == null && value.compareTo(item.value) > 0) { // this is head & item < this
-                T tempVal = value; // swap old head value with item value & insert old head
-                value = item.value;
-                item.value = tempVal;
-                return insert(item);
-            }
+                    if (current.prev.get(r) == null && current.next.get(r) == null) { // lone head
+                        rows--;
+                        r--; // drop row & continue
+                        continue;
+                    }
 
-            if (next.get(r) == null && value.compareTo(item.value) < 0) { // this is tail & item > this
-                if (item.maxR >= r) {
-                    item.prev.set(r, this); // insert @ end
-                    this.next.set(r, item);
+                    if (current.prev.get(r) != null && current.next.get(r) == null) { // tail
+                        current.prev.get(r).next.set(r, null);
+                        if (r == 0 && tail == this)
+                            tail = current.prev.get(r);
+                        r--; // drop row & continue
+                        continue;
+                    }
+
+                    if (prev.get(r) != null && next.get(r) != null) { // in between
+                        prev.get(r).next.set(r, next.get(r)); // prev -> next
+                        next.get(r).prev.set(r, prev.get(r)); // prev <- next
+                        r--; // drop row & continue
+                        continue;
+                    }
+                }
+
+                if (current.next.get(r) == null) {
                     if (r == 0)
-                        tail = item;
+                        return false; // del not in list
+                    r--; // drop row & continue
+                    continue;
                 }
 
-                r--; // drop down a row & continue from this node
-                return insertHelper(item);
-            }
-
-            if (value.compareTo(item.value) < 0 && next.get(r).value.compareTo(item.value) > 0) { // this < item < next
-                if (item.maxR >= r) {
-                    item.prev.set(r, this); // insert in between
-                    item.next.set(r, next.get(r));
-                    next.get(r).prev.set(r, item);
-                    next.set(r, item);
+                if (current.next.get(r).value.compareTo(del) > 0) {
+                    r--; // drop row & continue
+                    continue;
                 }
 
-                r--; // drop down a row & continue from this node
-                return insertHelper(item);
+                current = current.next.get(r);
             }
 
-            return next.get(r).insert(item); // continue to next
+            return true;
         }
 
         public boolean insert(SkipListItem<T> item) {
             r = rows - 1; // start at top row
             item.setMaxRow(); // set max row <= # of rows
-            return insertHelper(item);
+
+            SkipListItem<T> current = this;
+
+            while (r > -1) {
+                if (current.value.compareTo(item.value) == 0)
+                    return false; // item already exists
+                if (current.prev.get(r) == null && current.value.compareTo(item.value) > 0) {
+                    // head & item < current
+                    T tempVal = current.value; // swap old head value with item value
+                    current.value = item.value;
+                    item.value = tempVal;
+                    return true; // insert old head
+                }
+                if (current.next.get(r) == null && current.value.compareTo(item.value) < 0) {
+                    // tail & item > current
+                    if (item.maxR >= r) {
+                        item.prev.set(r, current); // insert @ end
+                        current.next.set(r, item);
+                        if (r == 0)
+                            tail = item;
+                    }
+
+                    r--; // drop down a row & continue from current
+                    continue;
+                }
+                if (current.value.compareTo(item.value) < 0 &&
+                        current.next.get(r).value.compareTo(item.value) > 0) {
+                    if (item.maxR >= r) {
+                        item.prev.set(r, current); // insert in between
+                        item.next.set(r, current.next.get(r));
+                        current.next.get(r).prev.set(r, item);
+                        current.next.set(r, item);
+                    }
+
+                    r--; // drop down a row & continue from current
+                    continue;
+                }
+                current = current.next.get(r);
+            }
+
+            return true;
         }
 
         public void initPointers() {
@@ -392,34 +393,39 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
         SkipListSet<Integer> s = new SkipListSet<Integer>();
 
         // Generates SkipLists of level 3 or more
-        int j = 0;
-        while (true) {
-            s = new SkipListSet<Integer>();
-
-            s.random.setSeed(j);
-
-            for (int i = 0; i < 100000; i++) {
-                try {
-                    s.add(Integer.valueOf(s.random.nextInt(100)));
-                } catch (StackOverflowError e) {
-                    System.out.println("Seed: " + j);
-                }
-            }
-
-            // if (s.rows >= 3) {
-            // System.out.println("----------\nSeed: " + j);
-            // s.printSet();
-            // System.out.println("\n");
-            // }
-
-            j = s.random.nextInt();
-        }
-
+        // int j = 0;
+        // while (true) {
         // s = new SkipListSet<Integer>();
-        // s.random.setSeed(5);
 
-        // for (int i = 0; i < 10; i++)
+        // s.random.setSeed(j);
+
+        // for (int i = 0; i < 100000; i++) {
+        // try {
         // s.add(Integer.valueOf(s.random.nextInt(100)));
+        // } catch (StackOverflowError e) {
+        // System.out.println("Seed: " + j);
         // s.printSet();
+        // }
+        // }
+
+        // if (s.rows >= 3) {
+        // System.out.println("----------\nSeed: " + j);
+        // s.printSet();
+        // System.out.println("\n");
+        // }
+
+        // j = s.random.nextInt();
+        // }
+
+        s = new SkipListSet<Integer>();
+        s.random.setSeed(5);
+
+        for (int i = 0; i < 100; i++)
+            s.add(Integer.valueOf(s.random.nextInt(1000)));
+        s.printSet();
+
+        s.add(-1);
+        System.out.println("Iterations: " + s.iterations);
+        s.printSet();
     }
 }
