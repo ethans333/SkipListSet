@@ -7,7 +7,7 @@
 - Some values are missing from skip list
 - [x] Add All
 - [x] Clear
-- [ ] Comparator
+- [x] Comparator
 - [x] Contains
 - [x] Contains All
 - [x] Equals
@@ -22,4 +22,4 @@
 - [x] HeadSet
 - [x] Tail Set
 - [ ] To Array
-- [ ] ReBalance
+- [x] ReBalance

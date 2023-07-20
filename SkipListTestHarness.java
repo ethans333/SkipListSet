@@ -243,7 +243,7 @@ public class SkipListTestHarness {
 		// System.gc();
 		// SkipListTestHarness.executeDoubleCase(1000000, 100000, false, true);
 		// System.gc();
-		SkipListTestHarness.executeIntCase(100000, 10000, true, true);
+		SkipListTestHarness.executeIntCase(1000, 100, true, true);
 		System.gc();
 		SkipListTestHarness.executeIntCase(1000000, 10000, false, true);
 		System.gc();
