@@ -22,4 +22,4 @@
 - [x] HeadSet
 - [x] Tail Set
 - [ ] To Array
-- [ ] ReBalance
+- [x] ReBalance
