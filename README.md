@@ -4,7 +4,8 @@
 
 ### To Do
 
-- Some values are missing from skip list
+- [ ] Set minimum height based on how many items are in the list to prevent thrashing
+- [ ] Reimplement rebalance so that it doesn't set a new height
 - [x] Add All
 - [x] Clear
 - [x] Comparator
@@ -21,5 +22,5 @@
 - [x] Last
 - [x] HeadSet
 - [x] Tail Set
-- [ ] To Array
+- [x] To Array
 - [x] ReBalance

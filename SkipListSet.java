@@ -17,6 +17,7 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
     private int rows;
     private int r; // current row
     public int iterations = 0;
+    private int minHeight = 10;
 
     private Random random = new Random();
 
@@ -32,7 +33,7 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
 
     // Adds e into skip list at a random set of levels
     // Returns true if successful, false otherwise
-    // T e: element to be inserted
+    // e: element to be inserted
     public boolean add(T e) {
         SkipListItem<T> item = new SkipListItem<T>(e);
         if (head == null) {
@@ -41,6 +42,8 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
             current = item;
             size = 1;
             rows = head.nRows();
+            if (rows < minHeight)
+                rows = minHeight;
             head.initPointers();
             head.maxR = rows - 1;
             return true;
@@ -53,6 +56,8 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
 
     // Adds all of the elements in the specified collection to this set if they're
     // not already present.
+    // Returns true if adding all elements was successful, false otherwise.
+    // c: collection of types T, to be inserted into skiplist
     public boolean addAll(Collection<? extends T> c) {
         for (T item : c)
             if (!add(item))
@@ -94,6 +99,7 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
 
     // Returns true if this set contains all of the elements of the specified
     // collection.
+    // c: collection of items to be iterated over
     public boolean containsAll(Collection<?> c) {
         for (T item : (Collection<T>) c)
             if (!contains(item))
@@ -102,6 +108,8 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
     }
 
     // Compares the specified object with this set for equality.
+    // Returns true if o equals this skiplistset, false otherwise.
+    // o: skiplistset to be compared to
     public boolean equals(Object o) {
         if (!(o instanceof SkipListSet))
             return false;
@@ -136,6 +144,8 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
     }
 
     // Removes the specified element from this set if it is present.
+    // Returns true if remove was successful, false otherwise.
+    // o: object to be removed.
     public boolean remove(Object o) {
         if (head == null)
             return false;
@@ -147,6 +157,8 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
 
     // Removes from this set all of its elements that are contained in the specified
     // collection.
+    // Returns true if all removes were successful, false otherwise.
+    // c: collection of types T to be remove from skiplistset.
     public boolean removeAll(Collection<?> c) {
         for (T item : (Collection<T>) c)
             if (!remove(item))
@@ -156,6 +168,8 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
 
     // Retains only the elements in this set that are contained in the specified
     // collection.
+    // If retention was successful returns true, false otherwise.
+    // c : collection of elements in the set to be retained.
     public boolean retainAll(Collection<?> c) {
         if (!containsAll(c))
             return false;
@@ -176,6 +190,7 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
 
     // Returns a view of the portion of this set whose elements range from
     // fromElement, inclusive, to toElement, exclusive.
+    // Returns subset if sucessful, null otherwise.
     public SkipListSet<T> subSet(T fromElement, T toElement) {
         if (toElement.compareTo(fromElement) < 0)
             return null;
@@ -191,6 +206,7 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
     }
 
     // Returns the first (lowest) element currently in this set.
+    // Returns null if no elements are in the set.
     public T first() {
         if (head == null)
             return null;
@@ -198,12 +214,14 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
     }
 
     // Returns the last (highest) element currently in this set.
+    // Returns null if no elements are in the set.
     public T last() {
         return (T) tail.value;
     }
 
     // Returns a view of the portion of this set whose elements are strictly less
-    // than toElement
+    // than toElement.
+    // Returns subset if successful, null otherwise.
     public SkipListSet<T> headSet(T toElement) {
         SkipListSet<T> ss = new SkipListSet<T>();
         SkipListSetIterator<T> it = (SkipListSetIterator<T>) iterator();
@@ -217,6 +235,7 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
 
     // Returns a view of the portion of this set whose elements are greater than or
     // equal to fromElement.
+    // Returns subset if successful, null otherwise.
     public SkipListSet<T> tailSet(T fromElement) {
         SkipListSet<T> ss = new SkipListSet<T>();
         SkipListSetIterator<T> it = (SkipListSetIterator<T>) iterator();
@@ -248,9 +267,10 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
         return null;
     }
 
+    // Re-arranges elements with a log n ascension
     public void reBalance() { // Should be linear
-        rows = (int)(Math.log(size)/Math.log(2));
-        
+        rows = (int) (Math.log(size) / Math.log(2));
+
         SkipListSetIterator<T> it = (SkipListSetIterator<T>) iterator();
         SkipListItem<T> back = null;
         SkipListItem<T> tempPrev = null;
@@ -264,12 +284,14 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
             current.prev.set(0, tempPrev);
             current.next.set(0, tempNext);
 
-            if (current == head) current.maxR = rows;
+            if (current == head)
+                current.maxR = rows;
             if (current.maxR > 1) {
                 back = current.prev.get(0);
                 for (int row = 1; row < current.maxR; row++) {
-                    if (back == null) break;
-                    while (back.maxR-1 < row)
+                    if (back == null)
+                        break;
+                    while (back.maxR - 1 < row)
                         back = back.prev.get(0);
                     current.prev.set(row, back);
                     back.next.set(row, current);
@@ -335,6 +357,9 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
                 maxR = nRows() - 1;
         }
 
+        // Irretively removes element item in the skip list set
+        // item: Item to be removed
+        // returns true if deletion was successful, false otherwise
         public boolean remove(T del) {
             r = rows - 1;
             SkipListItem<T> current = this;
@@ -388,6 +413,9 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
             return true;
         }
 
+        // Irretively adds element item into skip list set
+        // item: Item to be inserted
+        // returns true if insertion was successful, false otherwise
         public boolean insert(SkipListItem<T> item) {
             iterations = 0;
             r = rows - 1; // start at top row
@@ -404,7 +432,7 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
                     T tempVal = current.value; // swap old head value with item value
                     current.value = item.value;
                     item.value = tempVal;
-                    return ((SkipListItem<T>)head).insert(item); // insert old head
+                    return ((SkipListItem<T>) head).insert(item); // insert old head
                 }
                 if (current.next.get(r) == null && current.value.compareTo(item.value) < 0) {
                     // tail & item > current
@@ -436,6 +464,7 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
             return true;
         }
 
+        // Initializes next and previous pointer arrays for skip list item
         public void initPointers() {
             prev = new ArrayList<SkipListItem<T>>(Collections.nCopies(rows, null));
             next = new ArrayList<SkipListItem<T>>(Collections.nCopies(rows, null));
@@ -448,6 +477,7 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
             next.get(row).printRow(row);
         }
 
+        // Constructor for skiplistitem
         public SkipListItem(T value) {
             this.value = value;
             initPointers();
@@ -489,10 +519,10 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
             s.add(Integer.valueOf(s.random.nextInt(100)));
         s.printSet();
 
-        System.out.println("Size: " + s.size());
+        // System.out.println("Size: " + s.size());
 
-        s.reBalance();
+        // s.reBalance();
 
-        s.printSet();
+        // s.printSet();
     }
 }
