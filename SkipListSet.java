@@ -17,7 +17,7 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
     private int rows;
     private int r; // current row
     public int iterations = 0;
-    private int minHeight = 10;
+    private int minHeight = 1;
 
     private Random random = new Random();
 
@@ -47,6 +47,10 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
             head.initPointers();
             head.maxR = rows - 1;
             return true;
+        }
+        if (rows < (int) (Math.log(size) / Math.log(2))) {
+            rows = minHeight = (int) (Math.log(size) / Math.log(2));
+            head.initPointers(); // Re-init pointers with new height
         }
         boolean res = head.insert(item);
         if (res)
@@ -269,37 +273,37 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
 
     // Re-arranges elements with a log n ascension
     public void reBalance() { // Should be linear
-        rows = (int) (Math.log(size) / Math.log(2));
+        // rows = (int) (Math.log(size) / Math.log(2));
 
-        SkipListSetIterator<T> it = (SkipListSetIterator<T>) iterator();
-        SkipListItem<T> back = null;
-        SkipListItem<T> tempPrev = null;
-        SkipListItem<T> tempNext = null;
+        // SkipListSetIterator<T> it = (SkipListSetIterator<T>) iterator();
+        // SkipListItem<T> back = null;
+        // SkipListItem<T> tempPrev = null;
+        // SkipListItem<T> tempNext = null;
 
-        while (it.hasNext()) {
-            current.setMaxRow();
-            tempPrev = current.prev.get(0);
-            tempNext = current.next.get(0);
-            current.initPointers();
-            current.prev.set(0, tempPrev);
-            current.next.set(0, tempNext);
+        // while (it.hasNext()) {
+        // current.setMaxRow();
+        // tempPrev = current.prev.get(0);
+        // tempNext = current.next.get(0);
+        // current.initPointers();
+        // current.prev.set(0, tempPrev);
+        // current.next.set(0, tempNext);
 
-            if (current == head)
-                current.maxR = rows;
-            if (current.maxR > 1) {
-                back = current.prev.get(0);
-                for (int row = 1; row < current.maxR; row++) {
-                    if (back == null)
-                        break;
-                    while (back.maxR - 1 < row)
-                        back = back.prev.get(0);
-                    current.prev.set(row, back);
-                    back.next.set(row, current);
-                }
-            }
+        // if (current == head)
+        // current.maxR = rows;
+        // if (current.maxR > 1) {
+        // back = current.prev.get(0);
+        // for (int row = 1; row < current.maxR; row++) {
+        // if (back == null)
+        // break;
+        // while (back.maxR - 1 < row)
+        // back = back.prev.get(0);
+        // current.prev.set(row, back);
+        // back.next.set(row, current);
+        // }
+        // }
 
-            current = current.next.get(0);
-        }
+        // current = current.next.get(0);
+        // }
     }
 
     // SkipListSet Constructor
@@ -417,14 +421,12 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
         // item: Item to be inserted
         // returns true if insertion was successful, false otherwise
         public boolean insert(SkipListItem<T> item) {
-            iterations = 0;
             r = rows - 1; // start at top row
             item.setMaxRow(); // set max row <= # of rows
 
             SkipListItem<T> current = this;
 
             while (r > -1) {
-                iterations++;
                 if (current.value.compareTo(item.value) == 0)
                     return false; // item already exists
                 if (current.prev.get(r) == null && current.value.compareTo(item.value) > 0) {
@@ -466,8 +468,18 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
 
         // Initializes next and previous pointer arrays for skip list item
         public void initPointers() {
-            prev = new ArrayList<SkipListItem<T>>(Collections.nCopies(rows, null));
-            next = new ArrayList<SkipListItem<T>>(Collections.nCopies(rows, null));
+            if (prev == null && next == null) {
+                prev = new ArrayList<SkipListItem<T>>(Collections.nCopies(rows, null));
+                next = new ArrayList<SkipListItem<T>>(Collections.nCopies(rows, null));
+                return;
+            }
+            // Reinitialize pointers with a bigger size
+            ArrayList<SkipListItem<T>> tempPrev = new ArrayList<SkipListItem<T>>(Collections.nCopies(rows, null));
+            ArrayList<SkipListItem<T>> tempNext = new ArrayList<SkipListItem<T>>(Collections.nCopies(rows, null));
+            tempPrev.addAll(prev);
+            tempNext.addAll(next);
+            prev = tempPrev;
+            next = tempNext;
         }
 
         public void printRow(int row) {
@@ -515,11 +527,11 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
 
         s.random.setSeed(5);
 
-        for (int i = 0; i < 100; i++)
-            s.add(Integer.valueOf(s.random.nextInt(100)));
+        for (int i = 1000; i >= 0; i--)
+            s.add(Integer.valueOf(i));
         s.printSet();
 
-        // System.out.println("Size: " + s.size());
+        System.out.println("Size: " + s.size());
 
         // s.reBalance();
 

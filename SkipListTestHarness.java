@@ -231,19 +231,19 @@ public class SkipListTestHarness {
 	}
 
 	public static void main(String args[]) {
-		// SkipListTestHarness.executeStringCase(100000, 10000, 1000, false, true);
-		// System.gc();
-		// SkipListTestHarness.executeStringCase(1000000, 10000, 1000, false, true);
-		// System.gc();
-		// SkipListTestHarness.executeStringCase(1000000, 100000, 1000, false, true);
-		// System.gc();
-		// SkipListTestHarness.executeDoubleCase(100000, 10000, true, true);
-		// System.gc();
-		// SkipListTestHarness.executeDoubleCase(1000000, 10000, false, true);
-		// System.gc();
-		// SkipListTestHarness.executeDoubleCase(1000000, 100000, false, true);
-		// System.gc();
-		SkipListTestHarness.executeIntCase(1000, 100, true, true);
+		SkipListTestHarness.executeStringCase(100000, 10000, 1000, false, true);
+		System.gc();
+		SkipListTestHarness.executeStringCase(1000000, 10000, 1000, false, true);
+		System.gc();
+		SkipListTestHarness.executeStringCase(1000000, 100000, 1000, false, true);
+		System.gc();
+		SkipListTestHarness.executeDoubleCase(100000, 10000, true, true);
+		System.gc();
+		SkipListTestHarness.executeDoubleCase(1000000, 10000, false, true);
+		System.gc();
+		SkipListTestHarness.executeDoubleCase(1000000, 100000, false, true);
+		System.gc();
+		SkipListTestHarness.executeIntCase(100000, 1000, true, true);
 		System.gc();
 		SkipListTestHarness.executeIntCase(1000000, 10000, false, true);
 		System.gc();
