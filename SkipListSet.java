@@ -30,7 +30,9 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
         // head.printMaxR();
     }
 
-    // Adds the specified element to this set if it is not already present.
+    // Adds e into skip list at a random set of levels
+    // Returns true if successful, false otherwise
+    // T e: element to be inserted
     public boolean add(T e) {
         SkipListItem<T> item = new SkipListItem<T>(e);
         if (head == null) {
