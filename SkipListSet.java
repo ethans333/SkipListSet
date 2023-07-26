@@ -512,21 +512,4 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
             initPointers();
         }
     }
-
-    public static void main(String args[]) {
-
-        SkipListSet<Integer> s = new SkipListSet<Integer>();
-
-        s.random.setSeed(5);
-
-        for (int i = 100; i > 0; i--)
-            s.add(Integer.valueOf(i));
-        s.printSet();
-
-        System.out.println("Size: " + s.size());
-
-        s.reBalance();
-
-        s.printSet();
-    }
 }
