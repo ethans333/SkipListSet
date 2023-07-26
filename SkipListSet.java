@@ -17,7 +17,6 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
     private int rows;
     private int r; // current row
     public int iterations = 0;
-    private int minHeight = 1;
 
     private Random random = new Random();
 
@@ -35,23 +34,20 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
     // Returns true if successful, false otherwise
     // e: element to be inserted
     public boolean add(T e) {
-        SkipListItem<T> item = new SkipListItem<T>(e);
         if (head == null) {
-            head = item;
-            tail = item;
-            current = item;
+            head = new SkipListItem<T>(e);
+            tail = head;
+            current = head;
             size = 1;
             rows = head.nRows();
-            if (rows < minHeight)
-                rows = minHeight;
-            head.initPointers();
+            head.initPointers(); // prev<T>[rows], next<T>[rows]
             head.maxR = rows - 1;
             return true;
+        } else if (rows < (int) (Math.log(size + 1) / Math.log(2))) {
+            rows = (int) (Math.log(size + 1) / Math.log(2));
+            head.initPointers(); // Re-init pointers with new, greater height
         }
-        if (rows < (int) (Math.log(size) / Math.log(2))) {
-            rows = minHeight = (int) (Math.log(size) / Math.log(2));
-            head.initPointers(); // Re-init pointers with new height
-        }
+        SkipListItem<T> item = new SkipListItem<T>(e);
         boolean res = head.insert(item);
         if (res)
             size++;
@@ -259,7 +255,7 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
         int i = 0;
 
         while (it.hasNext()) {
-            arr[i] = current.value;
+            arr[i++] = current.value;
             current = current.next.get(0);
         }
 
@@ -273,37 +269,52 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
 
     // Re-arranges elements with a log n ascension
     public void reBalance() { // Should be linear
-        // rows = (int) (Math.log(size) / Math.log(2));
+        SkipListSetIterator<T> it = (SkipListSetIterator<T>) iterator();
 
-        // SkipListSetIterator<T> it = (SkipListSetIterator<T>) iterator();
-        // SkipListItem<T> back = null;
-        // SkipListItem<T> tempPrev = null;
-        // SkipListItem<T> tempNext = null;
+        SkipListItem<T> prev = null;
+        SkipListItem<T> next = null;
 
-        // while (it.hasNext()) {
-        // current.setMaxRow();
-        // tempPrev = current.prev.get(0);
-        // tempNext = current.next.get(0);
-        // current.initPointers();
-        // current.prev.set(0, tempPrev);
-        // current.next.set(0, tempNext);
+        int i = 1, j = 0, k = 0;
 
-        // if (current == head)
-        // current.maxR = rows;
-        // if (current.maxR > 1) {
-        // back = current.prev.get(0);
-        // for (int row = 1; row < current.maxR; row++) {
-        // if (back == null)
-        // break;
-        // while (back.maxR - 1 < row)
-        // back = back.prev.get(0);
-        // current.prev.set(row, back);
-        // back.next.set(row, current);
-        // }
-        // }
+        while (current != null) {
+            current.maxR = 0;
 
-        // current = current.next.get(0);
-        // }
+            for (j = rows - 1; j >= 0; j--) {
+                if (i == 1) {
+                    current.maxR = rows - 1;
+                    break;
+                } else if (i >= Math.pow(2, j + 1) && i % Math.pow(2, j + 1) == 0) {
+                    current.maxR = j;
+                    break;
+                }
+            }
+
+            prev = current.prev.get(0);
+            next = current.next.get(0);
+
+            current.prev = new ArrayList<SkipListItem<T>>(Collections.nCopies(current.maxR + 1, null));
+            current.next = new ArrayList<SkipListItem<T>>(Collections.nCopies(current.maxR + 1, null));
+
+            current.prev.set(0, prev);
+            current.next.set(0, next);
+
+            for (j = current.maxR; j > 0; j--) {
+                prev = current;
+                next = current;
+
+                for (k = 0; k < (int) Math.pow(2, j + 1) + ((i == 1) ? -1 : 0); k++) {
+                    prev = (prev == null) ? null : prev.prev.get(0);
+                    next = (next == null) ? null : next.next.get(0);
+                }
+
+                current.prev.set(j, prev == current ? null : prev);
+                current.next.set(j, next == current ? null : next);
+            }
+
+            i++;
+
+            current = current.next.get(0);
+        }
     }
 
     // SkipListSet Constructor
@@ -344,7 +355,7 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
         ArrayList<SkipListItem<T>> prev = null;
         ArrayList<SkipListItem<T>> next = null;
 
-        private int maxR = Integer.MAX_VALUE; // max row item appears at
+        private int maxR = Integer.MAX_VALUE; // 0 to n-1
 
         // Returns integer that has a 100% chance of being 1, 50% change of being 2,
         // 100/2^n% of being n
@@ -368,7 +379,7 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
             r = rows - 1;
             SkipListItem<T> current = this;
 
-            while (r > -1) {
+            while (r > -1) { // Iterating on valid row
                 if (current.value.compareTo(del) == 0) { // current == item
                     if (current.prev.get(r) == null && current.next.get(r) != null) { // normal head
                         T tempVal = current.value; // swap old head value its next value & delete old head
@@ -426,7 +437,7 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
 
             SkipListItem<T> current = this;
 
-            while (r > -1) {
+            while (r > -1) { // Iterating on valid row
                 if (current.value.compareTo(item.value) == 0)
                     return false; // item already exists
                 if (current.prev.get(r) == null && current.value.compareTo(item.value) > 0) {
@@ -472,19 +483,25 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
                 prev = new ArrayList<SkipListItem<T>>(Collections.nCopies(rows, null));
                 next = new ArrayList<SkipListItem<T>>(Collections.nCopies(rows, null));
                 return;
+            } else {
+                // Reinitialize pointers with a bigger size
+                ArrayList<SkipListItem<T>> nPrev = new ArrayList<SkipListItem<T>>(Collections.nCopies(rows, null));
+                ArrayList<SkipListItem<T>> nNext = new ArrayList<SkipListItem<T>>(Collections.nCopies(rows, null));
+
+                for (int i = 0; i < prev.size(); i++) {
+                    nPrev.set(i, prev.get(i));
+                    nNext.set(i, next.get(i));
+                }
+
+                prev = nPrev;
+                next = nNext;
             }
-            // Reinitialize pointers with a bigger size
-            ArrayList<SkipListItem<T>> tempPrev = new ArrayList<SkipListItem<T>>(Collections.nCopies(rows, null));
-            ArrayList<SkipListItem<T>> tempNext = new ArrayList<SkipListItem<T>>(Collections.nCopies(rows, null));
-            tempPrev.addAll(prev);
-            tempNext.addAll(next);
-            prev = tempPrev;
-            next = tempNext;
         }
 
+        // Prints each row of skiplist set, used for troubleshooting
         public void printRow(int row) {
             System.out.printf("%d ", value);
-            if (next.get(row) == null)
+            if (next.size() < row || next.get(row) == null)
                 return;
             next.get(row).printRow(row);
         }
@@ -500,41 +517,16 @@ public class SkipListSet<T extends Comparable<T>> implements SortedSet<T> {
 
         SkipListSet<Integer> s = new SkipListSet<Integer>();
 
-        // Generates SkipLists of level 3 or more
-        // int j = 0;
-        // while (true) {
-        // s = new SkipListSet<Integer>();
-
-        // s.random.setSeed(j);
-
-        // for (int i = 0; i < 100000; i++) {
-        // try {
-        // s.add(Integer.valueOf(s.random.nextInt(100)));
-        // } catch (StackOverflowError e) {
-        // System.out.println("Seed: " + j);
-        // s.printSet();
-        // }
-        // }
-
-        // if (s.rows >= 3) {
-        // System.out.println("----------\nSeed: " + j);
-        // s.printSet();
-        // System.out.println("\n");
-        // }
-
-        // j = s.random.nextInt();
-        // }
-
         s.random.setSeed(5);
 
-        for (int i = 1000; i >= 0; i--)
+        for (int i = 100; i > 0; i--)
             s.add(Integer.valueOf(i));
         s.printSet();
 
         System.out.println("Size: " + s.size());
 
-        // s.reBalance();
+        s.reBalance();
 
-        // s.printSet();
+        s.printSet();
     }
 }
